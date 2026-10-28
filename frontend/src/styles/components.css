@@ -1,0 +1,323 @@
+/* Styles for reusable components and feature panels. */
+
+/* ---------- Panel ---------- */
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.panel__title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.panel__body {
+  padding: 12px 14px;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.panel__note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.resources-panel .panel__note {
+  margin: 10px 0 0;
+}
+
+/* ---------- Data badge ---------- */
+.data-badge {
+  flex-shrink: 0;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.data-badge--sample {
+  color: var(--info);
+}
+
+.data-badge--placeholder {
+  color: var(--warn);
+}
+
+.data-badge--config {
+  color: var(--text-muted);
+}
+
+/* ---------- Empty state ---------- */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 100%;
+  min-height: 120px;
+  padding: 16px;
+  text-align: center;
+}
+
+.empty-state__title {
+  font-weight: 600;
+}
+
+.empty-state__text {
+  max-width: 34ch;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ---------- Key/value list ---------- */
+.kv-list {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.kv-list__row {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  gap: 8px;
+  align-items: baseline;
+}
+
+.kv-list dt {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.kv-list dd {
+  margin: 0;
+}
+
+.kv-with-badge {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+/* ---------- Tags and status ---------- */
+.tag {
+  padding: 1px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--surface-hover);
+}
+
+.tag--low {
+  color: var(--text-muted);
+}
+
+.tag--medium {
+  color: var(--info);
+}
+
+.tag--high {
+  color: var(--warn);
+}
+
+.tag--critical {
+  color: var(--danger);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot--operational {
+  background: var(--ok);
+}
+
+.status-dot--degraded {
+  background: var(--warn);
+}
+
+.status-dot--offline {
+  background: var(--danger);
+}
+
+.ghost-button {
+  padding: 3px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.ghost-button:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ---------- Device details ---------- */
+.device-details {
+  flex: 1 1 auto;
+}
+
+.device-details__heading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 14px;
+}
+
+.device-details__heading h3 {
+  font-size: 16px;
+}
+
+.device-details__heading code {
+  color: var(--accent);
+}
+
+.subheading {
+  margin: 16px 0 8px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.link-list,
+.plain-list,
+.service-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.link-list li {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.link-list__peer {
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.link-list__peer:hover {
+  color: var(--accent);
+}
+
+.link-list__meta {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.plain-list li {
+  padding: 3px 0;
+}
+
+/* ---------- City services ---------- */
+.service-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 6px;
+}
+
+.service-list__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.service-list__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.service-list__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.service-list__meta {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ---------- Map legend ---------- */
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  padding: 8px 14px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.map-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.map-legend__swatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+}
+
+.map-legend__line {
+  width: 18px;
+  height: 0;
+  border-top: 2px solid #34445e;
+}
+
+.map-legend__line--encrypted {
+  border-top-color: #2f9e8f;
+}
+
+.map-legend__line--dashed {
+  border-top-style: dashed;
+}

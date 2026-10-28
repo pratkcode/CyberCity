@@ -1,0 +1,33 @@
+# macOS
+.DS_Store
+
+# Editors
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# SQLite (later phases)
+*.sqlite3
+*.db
+
+# Node / Vite
+node_modules/
+dist/
+coverage/
+*.log
+*.tsbuildinfo
+
+# Local environment
+.env
+.env.*
+!.env.example
