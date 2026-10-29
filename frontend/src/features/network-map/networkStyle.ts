@@ -1,83 +1,136 @@
 import type { StylesheetJson } from "cytoscape";
 
-import type { DeviceType } from "../../types/simulation";
-
-// Cytoscape draws on a canvas and cannot read CSS variables, so the map
-// palette lives here. Values match the tokens in styles/theme.css.
-const COLORS = {
-  text: "#c9d4e5",
-  edge: "#34445e",
-  edgeEncrypted: "#2f9e8f",
-  accent: "#38d9c0",
-  offline: "#5c6779",
-};
-
-export const DEVICE_STYLES: Record<DeviceType, { color: string; shape: string }> = {
-  router: { color: "#5b8cff", shape: "diamond" },
-  switch: { color: "#7a8bb8", shape: "round-rectangle" },
-  firewall: { color: "#ff8a4c", shape: "hexagon" },
-  server: { color: "#4cc3ff", shape: "round-rectangle" },
-  database: { color: "#b98cff", shape: "barrel" },
-  workstation: { color: "#9fb3c8", shape: "ellipse" },
-  iot_controller: { color: "#f2c94c", shape: "octagon" },
-  cloud_gateway: { color: "#38d9c0", shape: "round-tag" },
-};
+import { DEVICE_STYLES, MAP_COLORS as C, ZONE_COLORS } from "./palette";
 
 export const networkStylesheet: StylesheetJson = [
+  // ---- Zones (compound parents) ------------------------------------------
   {
-    selector: "node",
+    selector: "node.zone",
     style: {
       label: "data(label)",
-      color: COLORS.text,
-      "font-size": 10,
+      "text-valign": "top",
+      "text-halign": "center",
+      "text-margin-y": -6,
+      color: C.zoneText,
+      "font-size": 13,
+      "font-weight": 600,
+      "font-family": "Inter, system-ui, sans-serif",
+      "text-transform": "uppercase",
+      shape: "round-rectangle",
+      "background-opacity": 0.05,
+      "border-width": 1.5,
+      "border-style": "dashed",
+      "border-opacity": 0.7,
+      padding: "14px",
+    },
+  },
+  ...Object.entries(ZONE_COLORS).map(([kind, color]) => ({
+    selector: `node.zone[kind = "${kind}"]`,
+    style: { "border-color": color, "background-color": color },
+  })),
+
+  // ---- Devices -------------------------------------------------------------
+  {
+    selector: "node.device",
+    style: {
+      label: "data(label)",
+      color: C.text,
+      "font-size": 11.5,
       "font-family": "Inter, system-ui, sans-serif",
       "text-valign": "bottom",
-      "text-margin-y": 6,
+      "text-margin-y": 4,
       "text-wrap": "wrap",
-      "text-max-width": "84px",
-      width: 30,
-      height: 30,
+      "text-max-width": "112px",
+      width: 26,
+      height: 26,
       "border-width": 2,
-      "border-color": "#0b1220",
-      "background-color": "#7a8bb8",
+      "border-color": C.border,
     },
   },
   ...Object.entries(DEVICE_STYLES).map(([type, { color, shape }]) => ({
-    selector: `node[deviceType = "${type}"]`,
+    selector: `node.device[deviceType = "${type}"]`,
     style: { "background-color": color, shape: shape as never },
   })),
+  { selector: 'node.device[criticality = "critical"]', style: { width: 31, height: 31 } },
+
+  // Visual states: operational (default), degraded, isolated, unavailable.
+  { selector: "node.state-degraded", style: { "border-color": C.degraded, "border-width": 3 } },
   {
-    selector: 'node[criticality = "critical"]',
-    style: { width: 38, height: 38 },
+    selector: "node.state-isolated",
+    style: { "border-color": C.isolated, "border-width": 3, "border-style": "dashed" },
   },
   {
-    selector: "node.offline",
-    style: { "background-color": COLORS.offline, opacity: 0.6 },
-  },
-  {
-    selector: "node:selected",
+    selector: "node.state-unavailable",
     style: {
-      "border-color": COLORS.accent,
-      "border-width": 4,
-      "overlay-color": COLORS.accent,
-      "overlay-opacity": 0.12,
-      "overlay-padding": 8,
+      "background-color": C.offline,
+      "border-style": "dotted",
+      "border-color": "#7d889b",
+      opacity: 0.55,
+      color: "#6b778c",
     },
   },
+
+  // ---- Links ---------------------------------------------------------------
   {
     selector: "edge",
     style: {
-      width: 2,
-      "line-color": COLORS.edge,
-      "curve-style": "bezier",
+      width: "mapData(capacity, 2, 4, 1.5, 4)",
+      "line-color": C.edge,
+      "curve-style": "straight",
+      "font-size": 9,
+      color: C.text,
+      "text-background-color": "#0d1424",
+      "text-background-opacity": 0.85,
+      "text-background-padding": "2px",
     },
   },
   {
-    selector: "edge.encrypted",
-    style: { "line-color": COLORS.edgeEncrypted },
+    selector: "edge.arced",
+    style: {
+      "curve-style": "unbundled-bezier",
+      "control-point-distances": "data(bend)",
+      "control-point-weights": 0.5,
+    },
   },
+  { selector: "edge.encrypted", style: { "line-color": C.encrypted } },
   {
     selector: 'edge[linkType = "vpn"], edge[linkType = "wireless"]',
     style: { "line-style": "dashed" },
+  },
+  {
+    selector: "edge.blocked",
+    style: { "line-color": C.blocked, "line-style": "dotted", opacity: 0.7 },
+  },
+
+  // ---- Selection and highlighting ------------------------------------------
+  {
+    selector: "node.device:selected",
+    style: {
+      "border-color": C.highlight,
+      "border-width": 4,
+      "overlay-color": C.highlight,
+      "overlay-opacity": 0.14,
+      "overlay-padding": 7,
+    },
+  },
+  {
+    selector: "edge:selected",
+    style: { "line-color": C.highlight, width: 4, label: "data(label)" },
+  },
+  { selector: ".dimmed", style: { opacity: 0.18 } },
+  { selector: "node.zone.dimmed", style: { opacity: 0.5 } },
+  {
+    selector: "node.device.highlighted",
+    style: { "border-color": C.highlight, "border-width": 4, opacity: 1 },
+  },
+  {
+    selector: "edge.highlighted",
+    style: {
+      "line-color": C.highlight,
+      width: 4.5,
+      opacity: 1,
+      label: "data(label)",
+      "z-index": 10,
+    },
   },
 ];

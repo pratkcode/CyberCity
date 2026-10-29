@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError, requestJson } from "./apiClient";
+import { simulationApi } from "./simulationApi";
 
 function mockFetch(impl: () => Promise<Response>) {
   vi.stubGlobal("fetch", vi.fn(impl));
@@ -29,6 +30,19 @@ describe("requestJson", () => {
     const error = await requestJson("/network/devices/x").catch((e: unknown) => e);
     expect(error).toBeInstanceOf(ApiError);
     expect(error).toMatchObject({ status: 404, code: "not_found", message: "Device 'x' does not exist." });
+  });
+
+  it("encodes query parameters for typed endpoint helpers", async () => {
+    mockFetch(async () => Response.json({}));
+
+    await simulationApi.findPath("web-01", "db-01", "latency");
+    await simulationApi.checkAccess("web-01", "db-01", "sql");
+
+    const urls = vi.mocked(fetch).mock.calls.map(([url]) => url);
+    expect(urls).toEqual([
+      "/api/network/path?source=web-01&target=db-01&metric=latency",
+      "/api/policy/check?source=web-01&target=db-01&protocol=sql",
+    ]);
   });
 
   it("reports an unreachable backend as a network error", async () => {

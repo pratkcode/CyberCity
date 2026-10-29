@@ -43,10 +43,6 @@
   color: var(--text-faint);
 }
 
-.resources-panel .panel__note {
-  margin: 10px 0 0;
-}
-
 /* ---------- Data badge ---------- */
 .data-badge {
   flex-shrink: 0;
@@ -119,13 +115,6 @@
   margin: 0;
 }
 
-.kv-with-badge {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 8px;
-}
-
 /* ---------- Tags and status ---------- */
 .tag {
   padding: 1px 8px;
@@ -185,24 +174,124 @@
   border-color: var(--accent);
 }
 
-/* ---------- Device details ---------- */
-.device-details {
+
+.tag--info {
+  color: var(--text-muted);
+}
+
+.tag--status-online,
+.tag--health-operational {
+  color: var(--ok);
+}
+
+.tag--status-degraded,
+.tag--health-degraded,
+.tag--issue-warning {
+  color: var(--warn);
+}
+
+.tag--status-offline {
+  color: var(--text-muted);
+}
+
+.tag--health-down,
+.tag--isolated,
+.tag--issue-error {
+  color: var(--danger);
+}
+
+.tag--issue-info {
+  color: var(--text-muted);
+}
+
+.status-dot--down {
+  background: var(--danger);
+}
+
+.inline-tags {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  padding: 1px 7px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.primary-button {
+  padding: 6px 14px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primary-button:hover:not(:disabled) {
+  background: rgba(56, 217, 192, 0.22);
+}
+
+.primary-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.check-ok {
+  color: var(--ok);
+  font-weight: 700;
+}
+
+.check-fail {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+/* ---------- Details panel ---------- */
+.selection-panel {
   flex: 1 1 auto;
 }
 
-.device-details__heading {
+.details__heading {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
-.device-details__heading h3 {
+.details__heading h3 {
   font-size: 16px;
 }
 
-.device-details__heading code {
+.details__heading code {
   color: var(--accent);
+}
+
+.details__actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.details__note {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-left: 2px solid var(--border-strong);
+  background: var(--bg-elevated);
+  font-size: 12px;
+  color: var(--text-muted);
 }
 
 .subheading {
@@ -215,7 +304,10 @@
 
 .link-list,
 .plain-list,
-.service-list {
+.service-list,
+.dependency-list,
+.issue-list,
+.check-list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -250,21 +342,56 @@
   padding: 3px 0;
 }
 
+.dependency-list li {
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.dependency-list__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dependency-list__meta {
+  padding-left: 20px;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.dependency-list__reason {
+  margin: 4px 0 0 20px;
+  font-size: 12px;
+  color: var(--danger);
+}
+
 /* ---------- City services ---------- */
 .service-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 6px;
 }
 
 .service-list__item {
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 10px;
+  padding: 7px 10px;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.service-list__item:hover {
+  border-color: var(--border-strong);
+}
+
+.service-list__item.is-selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .service-list__text {
@@ -274,7 +401,8 @@
   flex: 1;
 }
 
-.service-list__name {
+.service-list__name,
+.service-list__meta {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -285,15 +413,114 @@
   color: var(--text-muted);
 }
 
+/* ---------- Path & access tool ---------- */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 10px;
+}
+
+.form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.form-grid select {
+  width: 100%;
+  padding: 5px 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+}
+
+.button-row {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.result {
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid;
+  background: var(--bg-elevated);
+  font-size: 12px;
+}
+
+.result--ok {
+  border-color: var(--ok);
+}
+
+.result--fail {
+  border-color: var(--danger);
+}
+
+.path-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.path-steps li:not(:last-child)::after {
+  content: " →";
+  color: var(--text-faint);
+}
+
+.check-list {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.check-list li {
+  display: flex;
+  gap: 6px;
+}
+
+/* ---------- Validation ---------- */
+.validation-summary {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.issue-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 12px;
+}
+
+.issue-list .tag {
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
 /* ---------- Map legend ---------- */
 .map-legend {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px 14px;
-  padding: 8px 14px;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px 14px;
   border-top: 1px solid var(--border);
   font-size: 11px;
   color: var(--text-muted);
+}
+
+.map-legend__group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
 }
 
 .map-legend__item {
@@ -302,22 +529,38 @@
   gap: 6px;
 }
 
-.map-legend__swatch {
-  width: 9px;
-  height: 9px;
-  border-radius: 2px;
+.map-legend__state {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #8494c0;
+  border: 2px solid var(--bg);
+}
+
+.map-legend__state--degraded {
+  border-color: #f2a03c;
+}
+
+.map-legend__state--isolated {
+  border: 2px dashed #ff6b6b;
+}
+
+.map-legend__state--unavailable {
+  background: #4b5566;
+  border: 2px dotted #7d889b;
+  opacity: 0.7;
 }
 
 .map-legend__line {
-  width: 18px;
+  width: 20px;
   height: 0;
-  border-top: 2px solid #34445e;
-}
-
-.map-legend__line--encrypted {
-  border-top-color: #2f9e8f;
+  border-top: 2px solid;
 }
 
 .map-legend__line--dashed {
   border-top-style: dashed;
+}
+
+.map-legend__line--dotted {
+  border-top-style: dotted;
 }

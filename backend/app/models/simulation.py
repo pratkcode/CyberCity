@@ -1,12 +1,14 @@
-"""Simulation configuration and snapshot models."""
+"""Simulation configuration, city definition, and API view models."""
 
 from enum import StrEnum
 
 from pydantic import Field
 
-from app.models.city import CityService
-from app.models.common import DisplayName, StrictModel
-from app.models.network import NetworkConnection, NetworkDevice
+from app.models.city import CityService, Organization, ServiceHealth
+from app.models.common import DisplayName, Identifier, StrictModel
+from app.models.devices import NetworkDevice
+from app.models.network import NetworkConnection, NetworkZone
+from app.models.policy import AccessPolicy
 
 MAX_SEED = 2**32 - 1
 
@@ -29,19 +31,63 @@ class SimulationConfig(StrictModel):
     )
 
 
-class NetworkSnapshot(StrictModel):
-    """Serializable view of the network, for the frontend map."""
+class CityDefinition(StrictModel):
+    """Everything needed to build a city. Validated before a simulation starts."""
 
+    zones: tuple[NetworkZone, ...]
     devices: tuple[NetworkDevice, ...]
     connections: tuple[NetworkConnection, ...]
+    policy: AccessPolicy
+    organizations: tuple[Organization, ...]
+    services: tuple[CityService, ...]
 
 
 class SimulationSummary(StrictModel):
-    """Top-level state returned after creating or fetching a simulation."""
-
     config: SimulationConfig
     tick: int = Field(ge=0)
     simulated_minutes: int = Field(ge=0)
+    zone_count: int = Field(ge=0)
     device_count: int = Field(ge=0)
     connection_count: int = Field(ge=0)
-    services: tuple[CityService, ...]
+    organization_count: int = Field(ge=0)
+    service_count: int = Field(ge=0)
+
+
+class Topology(StrictModel):
+    """The complete modeled network, for the map."""
+
+    zones: tuple[NetworkZone, ...]
+    devices: tuple[NetworkDevice, ...]
+    connections: tuple[NetworkConnection, ...]
+    segments: tuple[tuple[Identifier, ...], ...] = Field(
+        description="Groups of operational devices that can reach each other, largest first."
+    )
+    isolated_device_ids: tuple[Identifier, ...] = Field(
+        description="Operational devices outside the primary (largest) segment."
+    )
+
+
+class DeviceLink(StrictModel):
+    connection: NetworkConnection
+    neighbor_id: Identifier
+
+
+class DeviceDetail(StrictModel):
+    device: NetworkDevice
+    zone: NetworkZone
+    links: tuple[DeviceLink, ...]
+    reachable_device_ids: tuple[Identifier, ...]
+    isolated: bool
+    dependent_service_ids: tuple[Identifier, ...]
+
+
+class ZoneSummary(StrictModel):
+    zone: NetworkZone
+    device_ids: tuple[Identifier, ...]
+    operational_device_count: int = Field(ge=0)
+
+
+class ServiceOverview(StrictModel):
+    service: CityService
+    organization: Organization
+    health: ServiceHealth

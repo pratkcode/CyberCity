@@ -25,7 +25,10 @@ def error_body(code: str, message: str, details: list[Any] | None = None) -> dic
 def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(CyberCityError)
     async def _domain_error(_: Request, exc: CyberCityError) -> JSONResponse:
-        return JSONResponse(status_code=exc.status_code, content=error_body(exc.code, exc.message))
+        return JSONResponse(
+            status_code=exc.status_code,
+            content=jsonable_encoder(error_body(exc.code, exc.message, exc.details)),
+        )
 
     @app.exception_handler(RequestValidationError)
     async def _validation_error(_: Request, exc: RequestValidationError) -> JSONResponse:

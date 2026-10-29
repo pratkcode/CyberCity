@@ -1,12 +1,19 @@
+import type { Organization, ServiceOverview } from "../types/city";
 import type {
-  CityService,
-  HealthResponse,
-  NetworkDevice,
-  NetworkSnapshot,
-  SimulationConfig,
-  SimulationSummary,
-} from "../types/simulation";
+  ConnectionCheck,
+  DeviceDetail,
+  PathMetric,
+  PathResult,
+  PolicyRule,
+  Protocol,
+  Topology,
+  ValidationReport,
+  ZoneSummary,
+} from "../types/network";
+import type { HealthResponse, SimulationConfig, SimulationSummary } from "../types/simulation";
 import { requestJson } from "./apiClient";
+
+const query = (params: Record<string, string>) => new URLSearchParams(params).toString();
 
 export const simulationApi = {
   getHealth: () => requestJson<HealthResponse>("/health"),
@@ -19,10 +26,27 @@ export const simulationApi = {
       body: JSON.stringify(config),
     }),
 
-  getNetwork: () => requestJson<NetworkSnapshot>("/network"),
+  // Network
+  getTopology: () => requestJson<Topology>("/network"),
 
-  getDevice: (deviceId: string) =>
-    requestJson<NetworkDevice>(`/network/devices/${encodeURIComponent(deviceId)}`),
+  getZones: () => requestJson<ZoneSummary[]>("/network/zones"),
 
-  getServices: () => requestJson<CityService[]>("/services"),
+  getDeviceDetail: (deviceId: string) =>
+    requestJson<DeviceDetail>(`/network/devices/${encodeURIComponent(deviceId)}`),
+
+  findPath: (source: string, target: string, metric: PathMetric = "hops") =>
+    requestJson<PathResult>(`/network/path?${query({ source, target, metric })}`),
+
+  getValidation: () => requestJson<ValidationReport>("/network/validation"),
+
+  // Policy
+  getPolicyRules: () => requestJson<{ rules: PolicyRule[] }>("/policy/rules"),
+
+  checkAccess: (source: string, target: string, protocol: Protocol) =>
+    requestJson<ConnectionCheck>(`/policy/check?${query({ source, target, protocol })}`),
+
+  // City
+  getOrganizations: () => requestJson<Organization[]>("/city/organizations"),
+
+  getServices: () => requestJson<ServiceOverview[]>("/city/services"),
 };

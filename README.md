@@ -1,17 +1,42 @@
 # CyberCity
 
 An interactive cybersecurity strategy simulator. You defend a fictional city
-whose hospitals, banks, power grid, government services and cloud
-infrastructure share one interconnected network.
+whose hospitals, banks, power grid, government services, university and
+businesses share one interconnected network.
 
 > **Simulation only.** CyberCity never scans, connects to, or attacks real
-> systems. Every device, organization and event is invented and lives in memory.
+> systems. Every device, organization, vulnerability and event is invented and
+> lives in memory.
 
-**Status: Phase 1 (foundation).** The backend serves a seeded sample network,
-and the frontend shows it as an interactive map in a command-center layout.
-Incidents, defenses, budgets and campaigns come in later phases.
+**Status: Phase 2 (network modeling engine).** The backend models a 36-device
+city with zones, segmentation policies and service dependencies. The
+frontend shows it as an interactive zone map with device details, path
+finding, access checks and service health. Threat simulation, defenses,
+budgets and campaigns come in later phases.
 
-![Phase 1 command center](docs/screenshot.png)
+![Command center showing a highlighted path](docs/screenshot.png)
+
+## What's implemented
+
+- **Typed device models** for 11 categories, each with status, zone,
+  criticality, configured services, patch status and fictional vulnerabilities.
+- **Topology engine** (`NetworkManager`, NetworkX): add and remove
+  devices and links, neighbors, reachability, shortest paths (by hops or
+  latency), segments, isolated devices, and reference validation.
+- **Zone access policy**: priority-ordered allow/deny rules, deny wins ties,
+  default deny, and a plain-English reason for every decision.
+- **Connection checks**: device status + configured service + policy + path,
+  each reported separately.
+- **City services**: services depend on several devices across zones, and
+  health is computed from those checks.
+- **Pre-simulation validation** that blocks invalid cities and warns about
+  isolated or offline devices.
+- **Map**: zones as boxes, shape and color per category, operational /
+  degraded / isolated / unavailable states, link properties, path
+  highlighting, and a legend.
+
+See [docs/architecture.md](docs/architecture.md) for design decisions and
+the model's **simplifications**.
 
 ## Tech stack
 
@@ -27,32 +52,28 @@ Incidents, defenses, budgets and campaigns come in later phases.
 CyberCity/
 ├── backend/
 │   ├── app/
-│   │   ├── main.py            # FastAPI app factory + entry point
-│   │   ├── api/               # routers, dependencies, error handlers
-│   │   ├── models/            # Pydantic models (devices, links, services, events, config)
-│   │   ├── simulation/        # NetworkX graph, sample network, seeded initialization
-│   │   └── services/          # SimulationService + domain errors
-│   ├── tests/                 # pytest suite
+│   │   ├── main.py              # app factory
+│   │   ├── api/                 # routers: simulation, network, policy, city; errors; params
+│   │   ├── models/              # devices, network, policy, city, analysis, simulation
+│   │   ├── simulation/          # network_manager, policy, connectivity, service_health,
+│   │   │   │                    #   validation, state
+│   │   │   └── sample_city/     # devices, topology, policy, services
+│   │   └── services/            # SimulationService + domain errors
+│   ├── tests/                   # pytest suite + factories.py (tiny test graphs)
 │   ├── requirements.txt
-│   └── pyproject.toml         # pytest configuration only
+│   └── pyproject.toml           # pytest configuration only
 ├── frontend/
 │   ├── src/
-│   │   ├── components/        # reusable UI + layout (Sidebar, TopBar, Panel…)
-│   │   ├── features/          # network-map, device-details, alerts, city-services, resources
-│   │   ├── pages/             # CommandCenterPage
-│   │   ├── services/          # typed API client
-│   │   ├── hooks/             # data loading
-│   │   ├── types/             # TS mirrors of backend models
-│   │   ├── styles/            # theme tokens + layout
-│   │   └── test/              # test setup + fixtures
-│   ├── package.json
-│   └── vite.config.ts         # dev proxy /api → :8000, Vitest config
-└── docs/
-    └── architecture.md        # design decisions in detail
+│   │   ├── components/          # Panel, DataBadge, StatusTag, layout (Sidebar, TopBar)
+│   │   ├── features/            # network-map, details, path-tools, city-services, validation
+│   │   ├── pages/               # CommandCenterPage
+│   │   ├── services/            # typed API client
+│   │   ├── hooks/               # useSimulationData, useAsync
+│   │   ├── types/               # TS mirrors of backend models
+│   │   └── styles/, test/
+│   └── vite.config.ts           # dev proxy /api → :8000, Vitest config
+└── docs/architecture.md
 ```
-
-See [docs/architecture.md](docs/architecture.md) for the layering,
-determinism rules and error format.
 
 ## Setup (macOS)
 
@@ -60,32 +81,23 @@ Prerequisites:
 
 - **Python 3.12+** (`python3 --version`). Tested on 3.13.
 - **Node.js 22 or 24 LTS** (`node --version`). `frontend/.nvmrc` pins 24.
-  Node 25 also works, but npm prints engine warnings because Vitest and jsdom
-  officially support only even-numbered (LTS) releases.
-
-If you need them: `brew install python@3.13 node@24`, or use `nvm install 24`.
-
-### Backend
+  Node 25 works, but npm prints engine warnings for Vitest and jsdom.
 
 ```bash
+# Backend
 cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-```
 
-### Frontend
-
-```bash
+# Frontend (new terminal)
 cd frontend
 npm install
 ```
 
 ## Running
 
-Use two terminals.
-
-**Terminal 1: API (http://127.0.0.1:8000, docs at /docs)**
+**Terminal 1: API on http://127.0.0.1:8000 (interactive docs at /docs)**
 
 ```bash
 cd backend
@@ -93,7 +105,7 @@ source .venv/bin/activate
 uvicorn app.main:app --reload --port 8000
 ```
 
-**Terminal 2: UI (http://localhost:5173)**
+**Terminal 2: UI on http://localhost:5173**
 
 ```bash
 cd frontend
@@ -101,61 +113,78 @@ npm run dev
 ```
 
 Open **http://localhost:5173**. Use `localhost`, not `127.0.0.1`, because
-Vite listens on the IPv6 loopback by default. The dev server proxies `/api`
-to the backend, so no CORS setup is needed.
+Vite listens on the IPv6 loopback by default.
 
-## API (Phase 1)
+## API
 
-| Method | Path | Description |
-| --- | --- | --- |
-| GET | `/api/health` | Liveness check |
-| GET | `/api/simulation` | Current config, tick and services |
-| POST | `/api/simulation` | Start a new simulation from a `SimulationConfig` body |
-| GET | `/api/network` | All devices and connections |
-| GET | `/api/network/devices/{device_id}` | One device (404 if unknown, 422 if malformed ID) |
-| GET | `/api/services` | City services and their device dependencies |
+All routes are under `/api`. Errors always use
+`{"error": {"code", "message", "details"}}`.
 
-Example: start a reproducible simulation.
+| Method | Path | Description | Errors |
+| --- | --- | --- | --- |
+| GET | `/health` | Liveness check | |
+| GET | `/simulation` | Config, tick, and counts | |
+| POST | `/simulation` | Start a new simulation from a `SimulationConfig` body | 422 invalid config |
+| GET | `/network` | Complete topology: zones, devices, links, segments, isolated devices | |
+| GET | `/network/zones` | Zones with their device IDs | |
+| GET | `/network/devices/{device_id}` | Device, zone, links, reachable devices, dependent services | 404 unknown, 422 malformed ID |
+| GET | `/network/path?source=&target=&metric=hops\|latency` | Shortest usable path. `found: false` (200) when none exists | 404, 422 |
+| GET | `/network/validation` | Validation report for the current city | |
+| GET | `/policy/rules` | Access rules in evaluation order | |
+| GET | `/policy/check?source=&target=&protocol=` | Would simulated traffic be permitted? Step-by-step explanation | 404, 422 |
+| GET | `/city/organizations` | Organizations and sectors | |
+| GET | `/city/services` | Services with dependencies and current health | |
+| GET | `/city/services/{service_id}` | One service with health | 404, 422 |
+
+Examples:
 
 ```bash
+curl 'http://127.0.0.1:8000/api/network/path?source=biz-pos-01&target=bank-ledger-db-01&metric=latency'
+curl 'http://127.0.0.1:8000/api/policy/check?source=web-portal-01&target=gov-db-01&protocol=sql'
 curl -X POST http://127.0.0.1:8000/api/simulation \
-  -H 'Content-Type: application/json' \
-  -d '{"seed": 2024, "difficulty": "challenging", "tick_minutes": 30}'
+  -H 'Content-Type: application/json' -d '{"seed": 2024, "difficulty": "challenging"}'
 ```
 
-`SimulationConfig` fields: `seed` (0–4294967295), `city_name`,
-`difficulty` (`training` | `standard` | `challenging`), `starting_budget`
-(0–10,000,000), `tick_minutes` (1–240). Unknown fields are rejected.
+`SimulationConfig`: `seed` (0–4294967295), `city_name`, `difficulty`
+(`training` | `standard` | `challenging`), `starting_budget`, `tick_minutes`.
+Unknown fields are rejected.
 
 ## Testing
 
 ```bash
 # Backend (from backend/, venv active)
-python -m pytest
+python -m pytest            # 171 tests
 
 # Frontend (from frontend/)
-npm test             # Vitest, single run
-npm run typecheck    # TypeScript
-npm run build        # typecheck + production build
+npm test                    # Vitest: 40 tests
+npm run typecheck
+npm run build               # typecheck + production build
 ```
 
-Backend tests cover health, model validation, sample-network integrity,
-API error responses and seeded determinism. Frontend tests cover the
-device details panel, Cytoscape element mapping, the API client's error
-handling and the command-center page (with the canvas map mocked).
+Backend tests use tiny graphs built in `tests/factories.py`. They cover device
+and connection add/remove, invalid IDs, pathfinding (tie-breaks, latency,
+blocked links), reachability, segments, default deny, rule priority and
+ties, connection checks, service health, validation, sample-city
+invariants, determinism, and every API endpoint's schema and errors.
+
+Frontend tests cover the zone layout, Cytoscape element mapping, the
+detail views, the path and access tool, the API client, and the page (with
+the canvas map mocked).
 
 ## Current limitations
 
-- **No gameplay yet.** The clock doesn't advance, no security events are
-  generated, and service statuses never change. These panels are clearly
-  marked *Placeholder*.
-- **In-memory state.** Restarting the API resets the simulation. There is
-  one shared simulation per server process, with no users or sessions.
-- **Fixed topology.** `POST /api/simulation` reseeds the bundled sample
-  network. It can't load custom networks yet.
-- **Hand-synced types.** `frontend/src/types` mirrors the Pydantic models
-  manually.
-- **Bundle size.** Cytoscape makes the production JS bundle about 670 KB
-  (about 210 KB gzipped), and Vite warns about it. Code-splitting can wait
-  until there are more pages.
-- **Desktop only.** The layout targets 1280 px and wider screens.
+- **No threats or gameplay yet.** The clock doesn't advance, no security
+  events are generated, and the alert feed is a labeled placeholder.
+- **Simplified network model.** Policy is checked end to end between zones,
+  not per firewall hop. There is no capacity or congestion, and health is a
+  three-level rule. See *Simplifications* in the architecture doc.
+- **Read-only API.** `NetworkManager` supports adding and removing devices
+  and links, but no HTTP endpoints expose mutation yet.
+- **In-memory state.** Restarting the API resets the simulation, and there is
+  one shared simulation per server process.
+- **Fixed sample city.** `POST /api/simulation` reseeds the bundled city and
+  can't load custom cities over HTTP yet (the app factory accepts one in code).
+- **Hand-synced types.** `frontend/src/types` mirrors the Pydantic models manually.
+- **Map scale.** At about 1280×800 the full map renders small. Scroll to zoom
+  and press **Fit** to reset. Long links can still cross zone boxes.
+- **Bundle size.** Cytoscape makes the JS bundle about 680 KB (about 215 KB gzipped).

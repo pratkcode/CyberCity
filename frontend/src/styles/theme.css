@@ -82,6 +82,14 @@ code,
   color: var(--ok);
 }
 
+.text-danger {
+  color: var(--danger);
+}
+
+.text-faint {
+  color: var(--text-faint);
+}
+
 .small {
   font-size: 12px;
 }

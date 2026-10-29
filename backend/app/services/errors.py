@@ -4,6 +4,8 @@ Keeping these free of FastAPI imports lets the services be used from tests,
 scripts or a future CLI without dragging in HTTP concerns.
 """
 
+from typing import Any
+
 
 class CyberCityError(Exception):
     """Base class for expected, user-facing errors."""
@@ -11,9 +13,10 @@ class CyberCityError(Exception):
     code = "cybercity_error"
     status_code = 400
 
-    def __init__(self, message: str) -> None:
+    def __init__(self, message: str, details: list[Any] | None = None) -> None:
         super().__init__(message)
         self.message = message
+        self.details = details or []
 
 
 class NotFoundError(CyberCityError):
